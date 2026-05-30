@@ -1,0 +1,73 @@
+<script setup>
+import { ref, computed } from 'vue';
+// 引入子组件
+import TaskHeader from './components/TaskHeader.vue';
+import TaskInput from './components/TaskInput.vue';
+import TaskFilter from './components/TaskFilter.vue';
+import TaskItem from './components/TaskItem.vue';
+
+// --- 数据状态 ---
+const tasks = ref([
+  { id: '1', title: '体验 Tailwind v4 新特性', isCompleted: false },
+  { id: '2', title: '掌握 Composition API', isCompleted: true }
+]);
+const filter = ref('all');
+
+// --- 逻辑处理 ---
+const handleAddTask = (title) => {
+  tasks.value.unshift({ id: crypto.randomUUID(), title, isCompleted: false });
+};
+
+const handleRemoveTask = (id) => {
+  tasks.value = tasks.value.filter(t => t.id !== id);
+};
+
+const handleToggleTask = (id) => {
+  const task = tasks.value.find(t => t.id === id);
+  if (task) task.isCompleted = !task.isCompleted;
+};
+
+// --- 计算属性 ---
+const filteredTasks = computed(() => {
+  debugger;
+  if (filter.value === 'active') return tasks.value.filter(t => !t.isCompleted);
+  if (filter.value === 'completed') return tasks.value.filter(t => t.isCompleted);
+  return tasks.value;
+});
+</script>
+
+<template>
+  <div class="min-h-screen py-12 px-4">
+    <div class="max-w-md mx-auto bg-white rounded-3xl shadow-xl shadow-slate-200 border border-slate-100 overflow-hidden">
+      
+      <TaskHeader />
+
+      <main class="p-6">
+        <TaskInput @add-task="handleAddTask" />
+
+        <TaskFilter v-model="filter" />
+
+        <ul class="space-y-3">
+          <TransitionGroup name="list">
+            <TaskItem 
+              v-for="task in filteredTasks" 
+              :key="task.id"
+              :task="task"
+              @toggle="handleToggleTask"
+              @remove="handleRemoveTask"
+            />
+          </TransitionGroup>
+        </ul>
+
+        <div v-if="filteredTasks.length === 0" class="text-center py-12 text-slate-400 text-sm">
+          暂无相关任务...
+        </div>
+      </main>
+    </div>
+  </div>
+</template>
+
+<style scoped>
+.list-enter-active, .list-leave-active { transition: all 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28); }
+.list-enter-from, .list-leave-to { opacity: 0; transform: translateX(30px); }
+</style>
